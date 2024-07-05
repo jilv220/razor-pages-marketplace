@@ -1,0 +1,32 @@
+@page
+
+@using Microsoft.AspNetCore.Authorization
+
+@model ConfirmEmailModel
+
+@{
+    ViewData["Title"] = "Confirm Email";
+}
+
+<div class="dvh-70">
+    <h2>@ViewData["Title"]</h2>
+
+    @if (Model.ShowSuccessMessage)
+    {
+        <div class="alert alert-success">
+            Your email has been confirmed successfully.
+        </div>
+    }
+    else if (Model.ShowErrorMessage)
+    {
+        <div class="alert alert-danger">
+            Error confirming email. Please try again later or contact support.
+        </div>
+    }
+    else
+    {
+        <div>
+            Validating your email confirmation...
+        </div>
+    }
+</div>

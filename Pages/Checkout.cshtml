@@ -1,0 +1,53 @@
+@page
+@model CheckoutModel
+@{
+    ViewData["Title"] = "Checkout";
+}
+
+<h2 class="mb-4">Checkout</h2>
+
+@if (Model.Cart == null || Model.Cart.CartProducts.Count == 0)
+{
+    <p class="fs-4">Your cart is empty</p>
+}
+else
+{
+    <table class="table">
+    <thead>
+        <tr>
+            <th>Product</th>
+            <th>Quantity</th>
+            <th>Price</th>
+            <th>Subtotal</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var cartProduct in Model.Cart.CartProducts)
+            {
+                var subtotal = (cartProduct.Product.UnitPrice * cartProduct.Quantity).ToString("C");
+                <tr>
+                    <td>@cartProduct.Product.Name</td>
+                    <td>@cartProduct.Quantity</td>
+                    <td>@cartProduct.Product.UnitPrice.ToString("C")</td>
+                    <td>@subtotal</td>
+                </tr>
+            }
+        </tbody>
+        <tfoot>
+            <tr>
+                <th colspan="3">Total</th>
+                <th>@Model.TotalAmount.ToString("C")</th>
+            </tr>
+        </tfoot>
+    </table>
+
+    <form method="post">
+    <button type="submit" asp-page-handler="Checkout" class="btn btn-outline-dark">Proceed to Checkout</button>
+</form>
+}
+
+<style scoped>
+    main {
+        height: 80dvh;
+    }
+</style>
