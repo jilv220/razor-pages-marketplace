@@ -1,13 +1,12 @@
 ﻿@using Microsoft.AspNetCore.Identity
 @using Project.Models
+@using Project.Components
 
 @inject SignInManager<ApplicationUser> SignInManager
 @inject UserManager<ApplicationUser> UserManager
-@inject Project.Services.CartService CartService
 
 @{
     var user = await UserManager.GetUserAsync(User);
-    var cartItemCount = user == null ? 0 : await CartService.GetCartItemCountAsync(user.Id);
 }
 
 <ul class="navbar-nav">
@@ -25,13 +24,11 @@
         </li>
         <li>
             <a class="nav-item" asp-page="/Checkout">
-                <div x-data class="btn btn-outline-dark">
+                <div class="btn btn-outline-dark">
                     Cart
                     @if (user != null)
                     {
-                        <span class="badge bg-dark text-white ms-1 rounded-pill">
-                            @cartItemCount
-                        </span>
+                        @(await Html.RenderComponentAsync<CartItemCounter>(RenderMode.Server))
                     }
                     else
                     {

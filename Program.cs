@@ -5,6 +5,7 @@ using Project.Configs;
 using Project.Data;
 using Project.Models;
 using Project.Services;
+using Project.Components;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -29,6 +30,11 @@ builder.Services
     .AddDefaultTokenProviders();
 
 builder.Services.AddRazorPages();
+builder.Services.AddServerSideBlazor();
+
+builder.Services
+    .AddRazorComponents()
+    .AddInteractiveServerComponents();
 
 // Configure Policies
 builder.Services
@@ -41,7 +47,7 @@ builder.Services.AddTransient<IEmailSender, EmailSender>();
 
 // Configure Custom Services
 builder.Services
-    .AddTransient<CartService>()
+    .AddScoped<CartService>()
     .AddTransient<UploadService>();
 
 var app = builder.Build();
@@ -65,7 +71,10 @@ app.UseRouting();
 
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseAntiforgery();
 
 app.MapRazorPages();
+app.MapRazorComponents<App>()
+    .AddInteractiveServerRenderMode();
 
 app.Run();
