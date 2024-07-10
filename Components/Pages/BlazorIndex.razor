@@ -14,9 +14,12 @@
 @inject NavigationManager Navigation
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject CartService CartService
+@inject IJSRuntime JSRuntime
 
 @code {
     public IList<Product> Products { get; set; }
+    public Product? productShown { get; set; }
+    public Product? productAdded { get; set; }
 
     private Cart? Cart { get; set; }
 
@@ -34,6 +37,11 @@
         }
     }
 
+    private async Task showAddToCartToast()
+    {
+        await JSRuntime.InvokeVoidAsync("showAddToCartToast", null);
+    }
+
     private async Task AddToCartAsync(int productId)
     {
         var authstate = await AuthenticationStateProvider.GetAuthenticationStateAsync();
@@ -46,6 +54,7 @@
         }
 
         await CartService.AddToCartAsync(user.Identity.Name, productId);
+        productAdded = await DbContext.Products.FirstOrDefaultAsync(p => p.Id == productId);
     }
 }
 
@@ -58,14 +67,17 @@
     </div>
 </header>
 
-<section class="py-5">
+<section class="py-5 position-relative">
     <div class="container px-4 px-lg-5 mt-5">
         <div class="row gx-4 gx-lg-5 row-cols-2 row-cols-md-3 row-cols-xl-4 justify-content-center">
             @foreach (var product in Products)
             {
                 <div class="col mb-5">
                     <div class="card h-100">
-                        <div class="position-relative">
+                        <div class="position-relative" role="button" data-bs-toggle="modal"
+                            data-bs-target="#productDescModal" @onclick=" () => {
+                    productShown = product;
+                }">
                             <img class="card-img-top"
                                 src="@(!string.IsNullOrEmpty(product.ImageUri) ? product.ImageUri : "https://dummyimage.com/450x300/dee2e6/6c757d.jpg")"
                                 width="300" height="165" alt="..." />
@@ -75,7 +87,10 @@
                             }
                         </div>
 
-                        <div class="card-body p-4">
+                        <div class="card-body p-4" role="button" data-bs-toggle="modal" data-bs-target="#productDescModal"
+                            @onclick=" () => {
+                    productShown = product;
+                }">
                             <div class="text-center">
                                 <h5 class="fw-bolder">@product.Name</h5>
                                 $@product.UnitPrice
@@ -85,8 +100,10 @@
                             <div class="text-center">
                                 @if (isUserSignedIn)
                                 {
-                                    <button class="btn btn-outline-dark mt-auto" @onclick="() => AddToCartAsync(product.Id)"
-                                        disabled="@(product.QtyInStock == 0)">Add to Cart</button>
+                                    <button class="btn btn-outline-dark mt-auto" id="addToCartToastBtn" @onclick=" async() => {
+                                        await AddToCartAsync(product.Id);
+                                        await showAddToCartToast();
+                                    }" disabled="@(product.QtyInStock == 0)">Add to Cart</button>
                                 }
                                 else
                                 {
@@ -101,6 +118,48 @@
         </div>
     </div>
 </section>
+
+@* Modal *@
+<div class="modal fade" id="productDescModal" tabindex="-1" aria-labelledby="productDescModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-3 fw-bold" id="productDescModalLabel">
+                    @productShown?.Name
+                </h1>
+            </div>
+            <div class="position-relative">
+                <img class="card-img-top"
+                    src="@(!string.IsNullOrEmpty(productShown?.ImageUri) ? productShown.ImageUri : "https://dummyimage.com/450x300/dee2e6/6c757d.jpg")"
+                    width="500" height="281" alt="..." />
+                @if (productShown?.QtyInStock == 0)
+                {
+                    <div class="card-badge badge rounded-pill text-bg-dark">Sold Out</div>
+                }
+            </div>
+            <div class="modal-body">
+                <h3 class="modal-title fs-5 fw-bold pb-1">Product Description</h3>
+                <span class="ms-3">
+                    @productShown?.Description
+                </span>
+            </div>
+        </div>
+    </div>
+</div>
+
+@* Toast *@
+<div class="toast-container position-fixed bottom-0 end-0 p-3">
+    <div id="addToCartToast" class="toast align-items-center text-bg-success border-0" role="alert"
+        aria-live="assertive" aria-atomic="true">
+        <div class="d-flex">
+            <div class="toast-body">
+                @productAdded?.Name added to cart
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"
+                aria-label="Close"></button>
+        </div>
+    </div>
+</div>
 
 <style scoped>
     #signin-container {
