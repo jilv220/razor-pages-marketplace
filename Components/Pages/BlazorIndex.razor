@@ -8,6 +8,7 @@
 @using Project.Data
 @using Project.Models
 @using Project.Services
+@using Microsoft.JSInterop
 
 @inject ApplicationDbContext DbContext
 @inject UserManager<ApplicationUser> UserManager
@@ -18,16 +19,23 @@
 
 @code {
     public IList<Product> Products { get; set; }
+    public IList<string> Categories { get; set; }
     public Product? productShown { get; set; }
     public Product? productAdded { get; set; }
 
     private Cart? Cart { get; set; }
-
     private bool isUserSignedIn { get; set; } = false;
+    private string selectedCategory { get; set; } = "All";
+    private string searchTerm { get; set; } = string.Empty;
+    private bool isPriceAscending { get; set; } = true;
+    private bool isInStock { get; set; } = true;
+    private double minPrice { get; set; }
+    private double maxPrice { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
-        Products = await DbContext.Products.ToListAsync();
+        Categories = await DbContext.Products.Select(p => p.Type).Distinct().ToListAsync();
+        await LoadProductsAsync();
         var authstate = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         var user = authstate.User;
 
@@ -35,6 +43,30 @@
         {
             isUserSignedIn = true;
         }
+    }
+
+    private async Task LoadProductsAsync()
+    {
+        var query = DbContext.Products.AsQueryable();
+
+        if (selectedCategory != "All")
+        {
+            query = query.Where(p => p.Type == selectedCategory);
+        }
+
+        if (!string.IsNullOrEmpty(searchTerm))
+        {
+            query = query.Where(p => p.Name.ToLower().Contains(searchTerm.ToLower()));
+        }
+
+        query = minPrice > 0 ? query.Where(p => (double)p.UnitPrice >= minPrice) : query;
+        query = maxPrice > 0 ? query.Where(p => (double)p.UnitPrice <= maxPrice) : query;
+
+        query = isInStock ? query.Where(p => p.QtyInStock > 0) : query.Where(p => p.QtyInStock == 0);
+
+        query = isPriceAscending ? query.OrderBy(p => (double)p.UnitPrice) : query.OrderByDescending(p => (double)p.UnitPrice);
+
+        Products = await query.ToListAsync();
     }
 
     private async Task showAddToCartToast()
@@ -55,6 +87,59 @@
 
         await CartService.AddToCartAsync(user.Identity.Name, productId);
         productAdded = await DbContext.Products.FirstOrDefaultAsync(p => p.Id == productId);
+        await showAddToCartToast();
+    }
+
+    private async Task OnCategoryChanged(ChangeEventArgs e)
+    {
+        selectedCategory = e.Value.ToString();
+        await LoadProductsAsync();
+    }
+
+    private async Task OnSearchChanged(ChangeEventArgs e)
+    {
+        searchTerm = e.Value.ToString();
+        await LoadProductsAsync();
+    }
+
+    private async Task OnSortOrderChanged()
+    {
+        isPriceAscending = !isPriceAscending;
+        await LoadProductsAsync();
+    }
+
+    private async Task OnStockChanged()
+    {
+        isInStock = !isInStock;
+        await LoadProductsAsync();
+    }
+
+    private async Task OnMinPriceChanged(ChangeEventArgs e)
+    {
+        if (double.TryParse(e.Value.ToString(), out double value))
+        {
+            minPrice = value;
+            await LoadProductsAsync();
+        }
+        else
+        {
+            minPrice = 0;
+            await LoadProductsAsync();
+        }
+    }
+
+    private async Task OnMaxPriceChanged(ChangeEventArgs e)
+    {
+        if (double.TryParse(e.Value.ToString(), out double value))
+        {
+            maxPrice = value;
+            await LoadProductsAsync();
+        }
+        else
+        {
+            maxPrice = 0;
+            await LoadProductsAsync();
+        }
     }
 }
 
@@ -67,6 +152,49 @@
     </div>
 </header>
 
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <div class="container px-4 px-lg-5">
+        <form class="d-flex">
+            <select class="form-select me-2" @onchange="OnCategoryChanged">
+                <option value="All">All Categories</option>
+                @foreach (var category in Categories)
+                {
+                    <option value="@category">@category</option>
+                }
+            </select>
+            <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search"
+                @oninput="OnSearchChanged">
+            <label class="me-2 sort-text">Sort by Price:</label>
+            <button class="me-2 btn btn-outline-secondary" type="button" @onclick="OnSortOrderChanged">
+                <div class="sort-text">
+                    @if (isPriceAscending)
+                    {
+                        <span>Low to High</span>
+                    }
+                    else
+                    {
+                        <span>High to Low</span>
+                    }
+                </div>
+            </button>
+            <input class="form-control me-2" type="number" placeholder="Min Price" @oninput="OnMinPriceChanged">
+            <input class="form-control me-2" type="number" placeholder="Max Price" @oninput="OnMaxPriceChanged">
+            <button class="btn btn-outline-secondary" type="button" @onclick="OnStockChanged">
+                <div class="sort-text">
+                    @if (isInStock)
+                    {
+                        <span>Available</span>
+                    }
+                    else
+                    {
+                        <span>Out of Stock</span>
+                    }
+                </div>
+            </button>
+        </form>
+    </div>
+</nav>
+
 <section class="py-5 position-relative">
     <div class="container px-4 px-lg-5 mt-5">
         <div class="row gx-4 gx-lg-5 row-cols-2 row-cols-md-3 row-cols-xl-4 justify-content-center">
@@ -75,9 +203,7 @@
                 <div class="col mb-5">
                     <div class="card h-100">
                         <div class="position-relative" role="button" data-bs-toggle="modal"
-                            data-bs-target="#productDescModal" @onclick=" () => {
-                    productShown = product;
-                }">
+                            data-bs-target="#productDescModal" @onclick="() => productShown = product">
                             <img class="card-img-top"
                                 src="@(!string.IsNullOrEmpty(product.ImageUri) ? product.ImageUri : "https://dummyimage.com/450x300/dee2e6/6c757d.jpg")"
                                 width="300" height="165" alt="..." />
@@ -88,9 +214,7 @@
                         </div>
 
                         <div class="card-body p-4" role="button" data-bs-toggle="modal" data-bs-target="#productDescModal"
-                            @onclick=" () => {
-                    productShown = product;
-                }">
+                            @onclick="() => productShown = product">
                             <div class="text-center">
                                 <h5 class="fw-bolder">@product.Name</h5>
                                 $@product.UnitPrice
@@ -100,10 +224,9 @@
                             <div class="text-center">
                                 @if (isUserSignedIn)
                                 {
-                                    <button class="btn btn-outline-dark mt-auto" id="addToCartToastBtn" @onclick=" async() => {
-                                        await AddToCartAsync(product.Id);
-                                        await showAddToCartToast();
-                                    }" disabled="@(product.QtyInStock == 0)">Add to Cart</button>
+                                    <button class="btn btn-outline-dark mt-auto" id="addToCartToastBtn"
+                                        @onclick="async() => await AddToCartAsync(product.Id)"
+                                        disabled="@(product.QtyInStock == 0)">Add to Cart</button>
                                 }
                                 else
                                 {
@@ -176,5 +299,10 @@
 
     .flex-grow-4 {
         flex-grow: 4;
+    }
+
+    .sort-text {
+        white-space: nowrap;
+        align-self: center;
     }
 </style>
