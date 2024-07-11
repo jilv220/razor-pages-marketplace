@@ -14,7 +14,7 @@ A sample market place implemented in razor pages.
 - Email Confirmation
 - Add Product to Cart
 - Checkout
-- Admin Panel to edit products
+- Admin Panel to Edit Products
 
 ## Dependencies
 
@@ -45,6 +45,12 @@ dotnet user-secrets set "EmailSettings:Password" "your-app-password"
 dotnet user-secrets set "EmailSettings:Host" "smtp.gmail.com"
 dotnet user-secrets set "EmailSettings:Port" "587"
 ```
+
+Gmail Example
+
+- [Create app password](https://support.google.com/accounts/answer/185833?hl=en)
+- Create a new app specific password
+- Use the password you created for your app as `<your-app-password>` when configuring `EmailSettings:Password`
 
 ### Migrate to latatest database
 
