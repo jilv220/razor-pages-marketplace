@@ -17,14 +17,19 @@
 
 @code {
     public IList<Product> Products { get; set; }
-
+    public IList<string> Categories { get; set; }
     private Cart? Cart { get; set; }
-
     private bool isUserSignedIn { get; set; } = false;
-
+    private string selectedCategory { get; set; } = "All";
+    private string searchTerm { get; set; } = string.Empty;
+    private bool isPriceAscending { get; set; } = true;
+    private bool isInStock { get; set; } = false;
+    private double minPrice { get; set; }
+    private double maxPrice { get; set; }
     protected override async Task OnInitializedAsync()
     {
-        Products = await DbContext.Products.ToListAsync();
+        Categories = await DbContext.Products.Select(p => p.Type).Distinct().ToListAsync();
+        await LoadProductsAsync();
         var authstate = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         var user = authstate.User;
 
@@ -32,6 +37,36 @@
         {
             isUserSignedIn = true;
         }
+    }
+
+    private async Task LoadProductsAsync()
+    {
+        var query = DbContext.Products.AsQueryable();
+
+        if (selectedCategory != "All")
+        {
+            query = query.Where(p => p.Type == selectedCategory);
+        }
+
+        if (!string.IsNullOrEmpty(searchTerm))
+        {
+            query = query.Where(p => p.Name.Contains(searchTerm));
+        }
+        if (minPrice > 0)
+        {
+            query = query.Where(p => (double)p.UnitPrice >= minPrice);
+        }
+
+        if (maxPrice > 0)
+        {
+            query = query.Where(p => (double)p.UnitPrice <= maxPrice);
+        }
+
+        query = isInStock ? query.Where(p => p.QtyInStock > 0) : query.Where(p => p.QtyInStock == 0);
+
+        query = isPriceAscending ? query.OrderBy(p => (double)p.UnitPrice) : query.OrderByDescending(p => (double)p.UnitPrice);
+
+        Products = await query.ToListAsync();
     }
 
     private async Task AddToCartAsync(int productId)
@@ -47,6 +82,48 @@
 
         await CartService.AddToCartAsync(user.Identity.Name, productId);
     }
+
+    private async Task OnCategoryChanged(ChangeEventArgs e)
+    {
+        selectedCategory = e.Value.ToString();
+        await LoadProductsAsync();
+    }
+
+    private async Task OnSearchChanged(ChangeEventArgs e)
+    {
+        searchTerm = e.Value.ToString();
+        await LoadProductsAsync();
+    }
+
+    private async Task OnSortOrderChanged()
+    {
+        isPriceAscending = !isPriceAscending;
+        await LoadProductsAsync();
+    }
+
+    private async Task OnStockChanged()
+    {
+        isInStock = !isInStock;
+        await LoadProductsAsync();
+    }
+
+    private async Task OnMinPriceChanged(ChangeEventArgs e)
+    {
+        if (double.TryParse(e.Value.ToString(), out double value))
+        {
+            minPrice = value;
+            await LoadProductsAsync();
+        }
+    }
+
+    private async Task OnMaxPriceChanged(ChangeEventArgs e)
+    {
+        if (double.TryParse(e.Value.ToString(), out double value))
+        {
+            maxPrice = value;
+            await LoadProductsAsync();
+        }
+    }
 }
 
 <header class="bg-dark py-5">
@@ -57,6 +134,50 @@
         </div>
     </div>
 </header>
+
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <div class="container px-4 px-lg-5">
+        <form class="d-flex">
+            <select class="form-select me-2" @onchange="OnCategoryChanged">
+                <option value="All">All Categories</option>
+                @foreach (var category in Categories)
+                {
+                    <option value="@category">@category</option>
+                }
+            </select>
+            <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search"
+                @oninput="OnSearchChanged">
+            <label class="me-2 sort-text">Sort by Price:</label>
+            <button class="me-2 btn btn-outline-secondary" type="button" @onclick="OnSortOrderChanged">
+                <div class="sort-text">
+                    @if (isPriceAscending)
+                    {
+                        <span>Low to High</span>
+                    }
+                    else
+                    {
+                        <span>High to Low</span>
+                    }
+                </div>
+            </button>
+            <input class="form-control me-2" type="number" placeholder="Min Price" @oninput="OnMinPriceChanged">
+            <input class="form-control me-2" type="number" placeholder="Max Price" @oninput="OnMaxPriceChanged">
+            <button class="btn btn-outline-secondary" type="button" @onclick="OnStockChanged">
+                <div class="sort-text">
+                    @if (isInStock)
+                    {
+                        <span>Available</span>
+                    }
+                    else
+                    {
+                        <span>Out of Stock</span>
+                    }
+                </div>
+            </button>
+
+        </form>
+    </div>
+</nav>
 
 <section class="py-5">
     <div class="container px-4 px-lg-5 mt-5">
@@ -117,5 +238,10 @@
 
     .flex-grow-4 {
         flex-grow: 4;
+    }
+
+    .sort-text {
+        white-space: nowrap;
+        align-self: center;
     }
 </style>
