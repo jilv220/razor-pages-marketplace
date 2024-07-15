@@ -50,6 +50,7 @@ namespace Project.Pages.Admin
                 if (Upload != null)
                 {
                     Product.ImageUri = await _uploadService.UploadImageAsync(Upload, Product.Id);
+                    Product.CreateTime = DateTime.Now;
                     _context.Attach(Product).State = EntityState.Modified;
                     await _context.SaveChangesAsync();
                 }

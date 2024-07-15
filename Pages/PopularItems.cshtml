@@ -1,18 +1,14 @@
 @page
-@model NewArrivalsModel
+@model PopularItemsModel
 @{
-    ViewData["Title"] = "New Arrivals";
+    ViewData["Title"] = "Popular Items";
 }
 
-@{
-    ViewData["Title"] = "New Arrivals";
-}
-
-<h1 class="text-center">New Arrivals</h1>
+<h1 class="text-center">Top 10 Bestsellers</h1>
 
 <div class="container px-4 px-lg-5 mt-5">
     <div class="row gx-4 gx-lg-5 row-cols-2 row-cols-md-3 row-cols-xl-4 justify-content-center">
-        @foreach (var product in Model.Products)
+        @foreach (var product in Model.PopularItems)
         {
             <div class="col mb-5">
                 <div class="card h-100">
@@ -28,14 +24,19 @@
 
                     <div class="card-body p-4" role="button" data-bs-toggle="modal" data-bs-target="#productDescModal">
                         <div class="text-center">
-                            <h5 class="fw-bolder">@product.Name</h5>
+                            <h5 class="fw-bolder">@product.ProductName</h5>
+                            @* <p>@product.Description</p> *@
+
+                            <p class="text-danger"> <i class="bi bi-award"></i>Sold: @product.QuantitySold</p>
+                            @* <p>Type: @product.Type</p> *@
                             <p>Price: $@product.UnitPrice</p>
-                            <p class="text-danger"><i class="bi bi-bell"></i> Just Arrivals at @product.CreateTime</p>
+                            @* <p>Qty In Stock: @product.QtyInStock</p> *@
                         </div>
                     </div>
                     <div class="card-footer p-4 pt-0 border-top-0 bg-transparent">
                         <div class="text-center">
-                            <button class="btn btn-outline-dark mt-auto">Add to Cart</button>
+                            <button class="btn btn-outline-dark mt-auto" disabled="@(product.QtyInStock == 0)">Add to
+                                Cart</button>
                         </div>
                     </div>
                 </div>

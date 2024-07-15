@@ -48,7 +48,8 @@ builder.Services.AddTransient<IEmailSender, EmailSender>();
 // Configure Custom Services
 builder.Services
     .AddScoped<CartService>()
-    .AddTransient<UploadService>();
+    .AddTransient<UploadService>()
+    .AddScoped<PopularItemsService>();
 
 var app = builder.Build();
 
