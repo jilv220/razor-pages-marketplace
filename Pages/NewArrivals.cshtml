@@ -4,9 +4,6 @@
     ViewData["Title"] = "New Arrivals";
 }
 
-@{
-    ViewData["Title"] = "New Arrivals";
-}
 
 <h1 class="text-center">New Arrivals</h1>
 
@@ -14,32 +11,32 @@
     <div class="row gx-4 gx-lg-5 row-cols-2 row-cols-md-3 row-cols-xl-4 justify-content-center">
         @foreach (var product in Model.Products)
         {
-            <div class="col mb-5">
-                <div class="card h-100">
-                    <div class="position-relative" role="button" data-bs-toggle="modal" data-bs-target="#productDescModal">
-                        <img class="card-img-top"
-                            src="@(!string.IsNullOrEmpty(product.ImageUri) ? product.ImageUri : "https://dummyimage.com/450x300/dee2e6/6c757d.jpg")"
-                            width="300" height="165" alt="..." />
+                <div class="col mb-5">
+                    <div class="card h-100">
+                        <div class="position-relative" role="button" data-bs-toggle="modal" data-bs-target="#productDescModal">
+                            <img class="card-img-top"
+                                src="@(!string.IsNullOrEmpty(product.ImageUri) ? product.ImageUri : "https://dummyimage.com/450x300/dee2e6/6c757d.jpg")"
+                                width="300" height="165" alt="..." />
                         @if (product.QtyInStock == 0)
                         {
-                            <div class="card-badge badge rounded-pill text-bg-dark">Sold Out</div>
+                                    <div class="card-badge badge rounded-pill text-bg-dark">Sold Out</div>
                         }
-                    </div>
-
-                    <div class="card-body p-4" role="button" data-bs-toggle="modal" data-bs-target="#productDescModal">
-                        <div class="text-center">
-                            <h5 class="fw-bolder">@product.Name</h5>
-                            <p>Price: $@product.UnitPrice</p>
-                            <p class="text-danger"><i class="bi bi-bell"></i> Just Arrivals at @product.CreateTime</p>
                         </div>
-                    </div>
-                    <div class="card-footer p-4 pt-0 border-top-0 bg-transparent">
-                        <div class="text-center">
-                            <button class="btn btn-outline-dark mt-auto">Add to Cart</button>
+
+                        <div class="card-body p-4" role="button" data-bs-toggle="modal" data-bs-target="#productDescModal">
+                            <div class="text-center">
+                                <h5 class="fw-bolder">@product.Name</h5>
+                                <p>Price: $@product.UnitPrice</p>
+                                <p class="text-danger"><i class="bi bi-bell"></i> Just Arrivals at @product.CreateTime</p>
+                            </div>
+                        </div>
+                        <div class="card-footer p-4 pt-0 border-top-0 bg-transparent">
+                            <div class="text-center">
+                                <button class="btn btn-outline-dark mt-auto">Add to Cart</button>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
         }
     </div>
 </div>
