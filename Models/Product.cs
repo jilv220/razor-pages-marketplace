@@ -15,4 +15,6 @@ public class Product
     public required decimal UnitPrice { get; set; }
     public required int QtyInStock { get; set; }
     public string? ImageUri { get; set; }
+
+    public DateTime CreateTime { get; set; }
 }
