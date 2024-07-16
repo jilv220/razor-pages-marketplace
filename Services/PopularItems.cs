@@ -15,18 +15,18 @@ public class PopularItemsService
 
     public async Task<List<PopularItems>> GetPopularItemsAsync()
     {
-        return await (from order in _dbContext.Orders
-                      join product in _dbContext.Products
-                      on order.ProductId equals product.Id
-                      group order by new { product.Id, product.Name, product.Description, product.ImageUri, product.Type, product.UnitPrice, product.QtyInStock } into g
-                      orderby g.Sum(o => o.Quantity) descending
+        return await (from orderDetail in _dbContext.OrderDetails
+                      join order in _dbContext.Orders on orderDetail.OrderId equals order.Id
+                      join product in _dbContext.Products on orderDetail.ProductId equals product.Id
+                      group orderDetail by new { product.Id, product.Name, product.Description, product.ImageUri, product.Type, product.UnitPrice, product.QtyInStock } into g
+                      orderby g.Sum(od => od.Quantity) descending
                       select new PopularItems
                       {
                           ProductId = g.Key.Id,
                           ProductName = g.Key.Name,
                           Description = g.Key.Description,
                           ImageUri = g.Key.ImageUri,
-                          QuantitySold = g.Sum(o => o.Quantity),
+                          QuantitySold = g.Sum(od => od.Quantity),
                           Type = g.Key.Type,
                           UnitPrice = g.Key.UnitPrice,
                           QtyInStock = g.Key.QtyInStock

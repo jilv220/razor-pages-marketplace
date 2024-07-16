@@ -12,42 +12,99 @@
 }
 else
 {
-    <table class="table">
-    <thead>
-        <tr>
-            <th>Product</th>
-            <th>Quantity</th>
-            <th>Price</th>
-            <th>Subtotal</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var cartProduct in Model.Cart.CartProducts)
-            {
-                var subtotal = (cartProduct.Product.UnitPrice * cartProduct.Quantity).ToString("C");
-                <tr>
-                    <td>@cartProduct.Product.Name</td>
-                    <td>@cartProduct.Quantity</td>
-                    <td>@cartProduct.Product.UnitPrice.ToString("C")</td>
-                    <td>@subtotal</td>
-                </tr>
-            }
-        </tbody>
-        <tfoot>
-            <tr>
-                <th colspan="3">Total</th>
-                <th>@Model.TotalAmount.ToString("C")</th>
-            </tr>
-        </tfoot>
-    </table>
-
     <form method="post">
-    <button type="submit" asp-page-handler="Checkout" class="btn btn-outline-dark">Proceed to Checkout</button>
-</form>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Product</th>
+                <th>Quantity</th>
+                <th>Price</th>
+                <th>Subtotal</th>
+            </tr>
+        </thead>
+        <tbody id="cart-body">
+            @foreach (var cartProduct in Model.Cart.CartProducts)
+                {
+                    var subtotal = (cartProduct.Product.UnitPrice * cartProduct.Quantity).ToString("C");
+                    <tr data-product-id="@cartProduct.ProductId" data-product-price="@cartProduct.Product.UnitPrice">
+                        <td>@cartProduct.Product.Name</td>
+                        <td>
+                            <input type="number" name="Quantities" value="@cartProduct.Quantity" min="1"
+                                class="form-control quantity-input" />
+                            <input type="hidden" name="ProductIds" value="@cartProduct.ProductId" />
+                        </td>
+                        <td>@cartProduct.Product.UnitPrice.ToString("C")</td>
+                        <td class="subtotal">@subtotal</td>
+                    </tr>
+                }
+            </tbody>
+            <tfoot>
+                <tr>
+                    <th colspan="3">Total</th>
+                    <th id="total-amount">@Model.TotalAmount.ToString("C")</th>
+                </tr>
+            </tfoot>
+        </table>
+
+        <button type="submit" class="btn btn-primary mt-3">Proceed to Checkout</button>
+    </form>
 }
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const quantityInputs = document.querySelectorAll(".quantity-input");
+        const cartBody = document.getElementById("cart-body");
+        const totalAmountElement = document.getElementById("total-amount");
+
+        quantityInputs.forEach(input => {
+            input.addEventListener("input", updateCart);
+        });
+
+        function updateCart() {
+            let totalAmount = 0;
+
+            document.querySelectorAll("#cart-body tr").forEach(row => {
+                const quantityInput = row.querySelector(".quantity-input");
+                const productPrice = parseFloat(row.getAttribute("data-product-price"));
+                const quantity = parseInt(quantityInput.value);
+                const subtotalElement = row.querySelector(".subtotal");
+
+                if (!isNaN(quantity) && quantity > 0) {
+                    const subtotal = productPrice * quantity;
+                    subtotalElement.textContent = subtotal.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+                    totalAmount += subtotal;
+                }
+            });
+
+            totalAmountElement.textContent = totalAmount.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+        }
+
+        updateCart();
+    });
+</script>
 
 <style scoped>
     main {
         height: 80dvh;
+    }
+
+    table {
+        width: 100%;
+    }
+
+    th,
+    td {
+        text-align: center;
+        vertical-align: middle;
+    }
+
+    .form-control {
+        width: 60px;
+        margin: auto;
+    }
+
+    .btn {
+        display: block;
+        margin: auto;
     }
 </style>

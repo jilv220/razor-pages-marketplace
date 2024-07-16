@@ -17,6 +17,18 @@
 -- INSERT INTO Orders (Id,UserId, ProductId, Quantity, TotalPrice, OrderDate) VALUES (1,'07086e6c-0592-4679-9ed6-e41260738a80', 1, 10, 199.99, '2021-01-01');
 --UPDATE AspNetUsers SET EmailConfirmed=1 WHERE Email="ivysong678@outlook.com";
 -- SELECT * FROM AspNetUsers;
-SELECT *
-FROM Products;
---SELECT * FROM Orders;
+-- Drop TABLE Orders;
+-- CREATE TABLE Orders (
+--     Id INTEGER PRIMARY KEY AUTOINCREMENT,
+--     OrderDate DATETIME,
+--     UserId TEXT
+-- );
+CREATE TABLE OrderDetails (
+    Id INTEGER PRIMARY KEY AUTOINCREMENT,
+    OrderId INTEGER,
+    ProductId INTEGER,
+    Quantity INTEGER,
+    TotalPrice DECIMAL(12, 2),
+    FOREIGN KEY (OrderId) REFERENCES Orders(Id),
+    FOREIGN KEY (ProductId) REFERENCES Products(Id)
+);

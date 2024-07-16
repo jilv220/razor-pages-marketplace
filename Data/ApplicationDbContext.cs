@@ -18,6 +18,8 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
 
     public DbSet<Orders> Orders { get; set; }
 
+    public DbSet<OrderDetails> OrderDetails { get; set; }
+
     // https://frankofoedu.medium.com/how-to-seed-identity-role-with-associated-user-in-asp-net-core-ef-core-e40ecd643d0f
     protected override void OnModelCreating(ModelBuilder builder)
     {
