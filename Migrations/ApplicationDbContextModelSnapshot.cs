@@ -2,20 +2,17 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Project.Data;
 
 #nullable disable
 
-namespace Project.Data.Migrations
+namespace Project.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20240704172841_AddCartAndCartProduct")]
-    partial class AddCartAndCartProduct
+    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
     {
-        /// <inheritdoc />
-        protected override void BuildTargetModel(ModelBuilder modelBuilder)
+        protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.6");
@@ -164,6 +161,29 @@ namespace Project.Data.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("OrderDetails", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("OrderId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<decimal>("TotalPrice")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("OrderDetails");
+                });
+
             modelBuilder.Entity("Project.Models.ApplicationUser", b =>
                 {
                     b.Property<string>("Id")
@@ -232,15 +252,15 @@ namespace Project.Data.Migrations
                         {
                             Id = "07086e6c-0592-4679-9ed6-e41260738a80",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "7ccf63b8-dd1c-494b-a6af-0c8c8bdc1315",
+                            ConcurrencyStamp = "8dafb659-db29-4158-a83f-0d6872c864ee",
                             Email = "test@mail.com",
                             EmailConfirmed = true,
                             LockoutEnabled = false,
                             NormalizedEmail = "TEST@MAIL.COM",
                             NormalizedUserName = "TEST@MAIL.COM",
-                            PasswordHash = "AQAAAAIAAYagAAAAEOKEBwhNDrbtNHhwJ1jQ9RdSvOO4I+O0K5DJMr+ov1W5iSU4xoU25qIITShTEl2a1w==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEPI4h60qyLftbhKs3xx1tLYH+qq/BdoLsJQHi3ynUV3H0avNTGdqRyhD95Mhj9yTPA==",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "efef02be-0350-455d-a095-bfdd0140fb49",
+                            SecurityStamp = "7c1ec666-7f7f-457a-bccc-1c44dc73d40e",
                             TwoFactorEnabled = false,
                             UserName = "test@mail.com"
                         });
@@ -287,11 +307,32 @@ namespace Project.Data.Migrations
                     b.ToTable("CartProducts");
                 });
 
+            modelBuilder.Entity("Project.Models.Orders", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("OrderDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Orders");
+                });
+
             modelBuilder.Entity("Project.Models.Product", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreateTime")
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Description")
                         .HasColumnType("TEXT");
